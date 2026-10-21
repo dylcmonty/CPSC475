@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Crop search{% endblock %}
+{% block content %}
+<h1>Crop search</h1>
+<p>Searches scientific names, common names and product titles. Crops with the most auction history come first.</p>
+<form class="search">
+  <input name="q" value="{{ term }}" placeholder="onion, Allium, strawberry…" aria-label="Search crops" autofocus>
+  <button>Search</button>
+</form>
+{% if term %}
+<table>
+  <thead><tr><th>Common name</th><th>Scientific name</th><th>Rank</th><th class="num">Auction lots</th></tr></thead>
+  <tbody>
+  {% for t in results %}
+    <tr>
+      <td><a href="{{ url_for('main.taxon_detail', taxon_id=t.taxon_id) }}">{{ t.common_name or "—" }}</a></td>
+      <td><em>{{ t.scientific_name }}</em></td>
+      <td>{{ t.rank }}</td>
+      <td class="num">{{ "{:,}".format(t.lots) }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">Nothing matches “{{ term }}”.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

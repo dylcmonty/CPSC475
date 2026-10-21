@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit event" if event else "Record an event" }}{% endblock %}
+{% block content %}
+{% include "_farm_nav.html" %}
+<h1>{{ "Edit event" if event else "Record an event" }}</h1>
+{% if not crops %}
+<p class="flash error">This farm has no crops in its catalog yet.
+  <a href="{{ url_for('catalog.catalog_list', farm_id=farm.farm_id) }}">Add a crop first.</a></p>
+{% else %}
+<form method="post" class="stacked">
+  <label>Date <input type="date" name="event_date" value="{{ form.get('event_date')|blank }}" required></label>
+  <label>Event
+    <select name="event_kind_code" required>
+      {% for k in kinds %}<option value="{{ k.event_kind_code }}" {% if form.get('event_kind_code') == k.event_kind_code %}selected{% endif %}>{{ k.label }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Crop
+    <select name="taxon_id" required>
+      {% for c in crops %}<option value="{{ c.taxon_id }}" {% if form.get('taxon_id')|string == c.taxon_id|string %}selected{% endif %}>{{ c.label }} ({{ c.scientific_name }})</option>{% endfor %}
+    </select>
+  </label>
+  <label>Plot <span class="hint">optional</span>
+    <select name="plot_id">
+      <option value="">None</option>
+      {% for p in plots %}<option value="{{ p.plot_id }}" {% if form.get('plot_id')|string == p.plot_id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Market product <span class="hint">optional</span>
+    <select name="product_id">
+      <option value="">None</option>
+      {% for p in products %}<option value="{{ p.product_id }}" {% if form.get('product_id')|string == p.product_id|string %}selected{% endif %}>{{ p.title }}</option>{% endfor %}
+    </select>
+  </label>
+  <div class="row">
+    <label>Quantity <span class="hint">optional</span> <input type="number" name="quantity" step="0.01" min="0" value="{{ form.get('quantity')|blank }}"></label>
+    <label>Unit <input name="unit" maxlength="40" value="{{ form.get('unit')|blank }}" placeholder="lb, bushel, flat…"></label>
+  </div>
+  <label>Notes <textarea name="notes" maxlength="1000" rows="3">{{ form.get('notes')|blank }}</textarea></label>
+  <button>{{ "Save" if event else "Record event" }}</button>
+</form>
+{% endif %}
+{% endblock %}

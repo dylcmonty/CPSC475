@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ farm.name }}{% endblock %}
+{% block content %}
+{% include "_farm_nav.html" %}
+<h1>{{ farm.name }}</h1>
+<p>{{ farm.region }}{% if farm.parent_region %}, {{ farm.parent_region }}{% endif %}
+  {% if farm.domain %} · {{ farm.domain }}{% endif %}</p>
+
+<div class="actions">
+  <a class="button" href="{{ url_for('events.event_new', farm_id=farm.farm_id) }}">Record an event</a>
+  <a class="button secondary" href="{{ url_for('plots.plot_new', farm_id=farm.farm_id) }}">Add a plot</a>
+  <a class="button secondary" href="{{ url_for('catalog.catalog_list', farm_id=farm.farm_id) }}">Add crops</a>
+</div>
+
+<h2>Recent events</h2>
+<table>
+  <thead><tr><th>Date</th><th>Event</th><th>Crop</th><th>Plot</th><th class="num">Quantity</th></tr></thead>
+  <tbody>
+  {% for e in events %}
+    <tr><td>{{ e.event_date }}</td><td>{{ e.event_kind }}</td><td>{{ e.crop }}</td><td>{{ e.plot|blank }}</td>
+        <td class="num">{{ e.quantity|blank }} {{ e.unit|blank }}</td></tr>
+  {% else %}
+    <tr><td colspan="5" class="empty">No events recorded yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Plots</h2>
+<table>
+  <thead><tr><th>Plot</th><th class="num">Area (m²)</th><th class="num">Events</th><th></th></tr></thead>
+  <tbody>
+  {% for p in plots %}
+    <tr>
+      <td>{{ p.name }}</td><td class="num">{{ p.area_sq_m|blank }}</td><td class="num">{{ p.events }}</td>
+      <td class="row-actions">
+        <a href="{{ url_for('plots.plot_edit', farm_id=farm.farm_id, plot_id=p.plot_id) }}">Edit</a>
+        <form method="post" action="{{ url_for('plots.plot_delete', farm_id=farm.farm_id, plot_id=p.plot_id) }}"
+              onsubmit="return confirm('Delete plot {{ p.name }}? Its events are kept without a plot.')">
+          <button class="link danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">No plots yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Crops grown</h2>
+<p>{% for c in catalog %}<a href="{{ url_for('main.taxon_detail', taxon_id=c.taxon_id) }}">{{ c.common_name or c.scientific_name }}</a>{% if not loop.last %}, {% endif %}
+{% else %}<span class="empty">No crops in the catalog yet.</span>{% endfor %}</p>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ taxon.common_name or taxon.scientific_name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('main.search') }}">Crop search</a>
+  {% if taxon.parent_id %} › parent: <a href="{{ url_for('main.taxon_detail', taxon_id=taxon.parent_id) }}"><em>{{ taxon.parent_name }}</em></a>{% endif %}</p>
+<h1>{{ taxon.common_name or taxon.scientific_name }}</h1>
+<p><em>{{ taxon.scientific_name }}</em> · {{ taxon.rank }} · path <code>{{ taxon.path }}</code></p>
+
+<h2>Seasonal price curve</h2>
+{% if curve %}
+<p>Lowest, average and highest auction price in each month, across every season on record.</p>
+<div class="chart"><canvas id="curve" aria-label="Seasonal price curve"></canvas></div>
+<table>
+  <thead><tr><th>Month</th><th class="num">Lots</th><th class="num">Seasons</th><th class="num">Floor</th><th class="num">Mean</th><th class="num">Ceiling</th></tr></thead>
+  <tbody>
+  {% for row in curve %}
+    <tr><td>{{ month_names[row.month - 1] }}</td><td class="num">{{ row.lots }}</td><td class="num">{{ row.seasons }}</td>
+        <td class="num">{{ row.floor_price|money }}</td><td class="num">{{ row.mean_price|money }}</td><td class="num">{{ row.ceiling_price|money }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No auction prices are linked to this taxon.</p>
+{% endif %}
+
+<h2>Products</h2>
+<ul>
+{% for p in products %}<li>{{ p.title }} ({{ "{:,}".format(p.lots) }} lots)</li>
+{% else %}<li class="empty">No products are linked to this taxon.</li>{% endfor %}
+</ul>
+{% endblock %}
+{% block scripts %}
+{% if curve %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const data = {{ chart|tojson }};
+  new Chart(document.getElementById("curve"), {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: "Ceiling", data: data.ceiling, borderColor: "#b45309", backgroundColor: "#b45309", tension: 0.3 },
+        { label: "Mean",    data: data.mean,    borderColor: "#166534", backgroundColor: "#166534", tension: 0.3, borderWidth: 3 },
+        { label: "Floor",   data: data.floor,   borderColor: "#64748b", backgroundColor: "#64748b", tension: 0.3 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, ticks: { callback: v => "$" + v } } },
+    },
+  });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Farms{% endblock %}
+{% block content %}
+<h1>Farms</h1>
+<form class="search">
+  <input name="q" value="{{ term }}" placeholder="Farm name or county" aria-label="Search farms">
+  <button>Search</button>
+  <a class="button" href="{{ url_for('farms.farm_new') }}">Add a farm</a>
+</form>
+<table>
+  <thead><tr><th>Farm</th><th>County</th><th>Website</th><th class="num">Events</th></tr></thead>
+  <tbody>
+  {% for f in farms %}
+    <tr>
+      <td><a href="{{ url_for('farms.farm_detail', farm_id=f.farm_id) }}">{{ f.name }}</a></td>
+      <td>{{ f.region }}</td>
+      <td>{{ f.domain|blank }}</td>
+      <td class="num">{{ f.events }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">No farms found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if farms|length == 100 %}<p class="hint">Showing the first 100. Search to narrow the list.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+<p class="crumbs"><a href="{{ url_for('farms.farm_list') }}">Farms</a> › <a href="{{ url_for('farms.farm_detail', farm_id=farm.farm_id) }}">{{ farm.name }}</a></p>
+<nav class="tabs">
+  <a href="{{ url_for('farms.farm_detail', farm_id=farm.farm_id) }}">Overview</a>
+  <a href="{{ url_for('events.event_list', farm_id=farm.farm_id) }}">Activity history</a>
+  <a href="{{ url_for('catalog.catalog_list', farm_id=farm.farm_id) }}">Crop catalog</a>
+  <a href="{{ url_for('farms.harvest_prices', farm_id=farm.farm_id) }}">Harvest vs. market</a>
+</nav>

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1>Almanac</h1>
+<p class="lede">A farm record book tied to a plant taxonomy and to Ohio produce auction prices.</p>
+
+<form class="search" action="{{ url_for('main.search') }}">
+  <input name="q" placeholder="Search crops: onion, Allium, strawberry…" aria-label="Search crops">
+  <button>Search</button>
+</form>
+
+<h2>What is in the database</h2>
+{% if lot_range.first_sale %}
+<p>Auction prices from {{ lot_range.first_sale }} to {{ lot_range.last_sale }}, across {{ "{:,}".format(lot_range.trading_days) }} trading days.</p>
+{% endif %}
+<table>
+  <thead><tr><th>Table</th><th class="num">Rows</th></tr></thead>
+  <tbody>
+  {% for row in counts %}
+    <tr><td><code>{{ row.table_name }}</code></td><td class="num">{{ "{:,}".format(row.rows) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Auction lots matched to a product</h2>
+<table>
+  <thead><tr><th>Source</th><th class="num">Lots</th><th class="num">Matched</th><th class="num">%</th></tr></thead>
+  <tbody>
+  {% for row in coverage %}
+    <tr><td>{{ row.source }}</td><td class="num">{{ "{:,}".format(row.total_lots) }}</td>
+        <td class="num">{{ "{:,}".format(row.resolved_lots) }}</td><td class="num">{{ row.pct_resolved }}</td></tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">No market data loaded yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

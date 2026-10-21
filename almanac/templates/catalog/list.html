@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Crop catalog · {{ farm.name }}{% endblock %}
+{% block content %}
+{% include "_farm_nav.html" %}
+<h1>Crop catalog</h1>
+<table>
+  <thead><tr><th>Crop</th><th>Scientific name</th><th>Added</th><th>Notes</th><th class="num">Events</th><th></th></tr></thead>
+  <tbody>
+  {% for c in entries %}
+    <tr>
+      <td><a href="{{ url_for('main.taxon_detail', taxon_id=c.taxon_id) }}">{{ c.common_name or "—" }}</a></td>
+      <td><em>{{ c.scientific_name }}</em></td><td>{{ c.added_on }}</td><td>{{ c.notes|blank }}</td>
+      <td class="num">{{ c.events }}</td>
+      <td class="row-actions">
+        <a href="{{ url_for('catalog.catalog_edit', farm_id=farm.farm_id, taxon_id=c.taxon_id) }}">Edit</a>
+        <form method="post" action="{{ url_for('catalog.catalog_delete', farm_id=farm.farm_id, taxon_id=c.taxon_id) }}"
+              onsubmit="return confirm('Remove this crop from the catalog?')">
+          <button class="link danger">Remove</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="empty">No crops yet. Search below to add one.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Add a crop</h2>
+<form class="search">
+  <input name="q" value="{{ term }}" placeholder="onion, Allium, strawberry…" aria-label="Search crops">
+  <button>Search</button>
+</form>
+{% if term %}
+<table>
+  <thead><tr><th>Common name</th><th>Scientific name</th><th>Rank</th><th class="num">Auction lots</th><th></th></tr></thead>
+  <tbody>
+  {% for t in matches %}
+    <tr>
+      <td>{{ t.common_name or "—" }}</td><td><em>{{ t.scientific_name }}</em></td><td>{{ t.rank }}</td>
+      <td class="num">{{ "{:,}".format(t.lots) }}</td>
+      <td>
+        <form method="post" action="{{ url_for('catalog.catalog_add', farm_id=farm.farm_id) }}">
+          <input type="hidden" name="taxon_id" value="{{ t.taxon_id }}">
+          <button class="small">Add</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="empty">Nothing matches “{{ term }}”.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

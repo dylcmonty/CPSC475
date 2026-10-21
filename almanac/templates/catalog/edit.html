@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Edit catalog entry{% endblock %}
+{% block content %}
+{% include "_farm_nav.html" %}
+<h1>{{ entry.common_name or entry.scientific_name }}</h1>
+<form method="post" class="stacked">
+  <label>Notes <textarea name="notes" maxlength="500" rows="4">{{ form.get('notes')|blank }}</textarea></label>
+  <button>Save</button>
+</form>
+{% endblock %}

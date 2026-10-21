@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Add a farm{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('farms.farm_list') }}">Farms</a></p>
+<h1>Add a farm</h1>
+<form method="post" class="stacked">
+  <label>Farm name <input name="name" value="{{ form.get('name')|blank }}" maxlength="200" required></label>
+  <label>County
+    <select name="region_id" required>
+      <option value="">Choose a county…</option>
+      {% for r in regions %}
+      <option value="{{ r.region_id }}" {% if form.get('region_id')|string == r.region_id|string %}selected{% endif %}>{{ r.name }}{% if r.parent_name %}, {{ r.parent_name }}{% endif %}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Web domain <span class="hint">optional</span> <input name="domain" value="{{ form.get('domain')|blank }}" maxlength="255" placeholder="examplefarm.com"></label>
+  <label>Owner email <span class="hint">optional</span> <input name="owner_email" type="email" value="{{ form.get('owner_email')|blank }}" maxlength="255"></label>
+  <button>Add farm</button>
+</form>
+{% endblock %}
