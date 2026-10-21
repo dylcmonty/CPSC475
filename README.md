@@ -53,7 +53,7 @@ stages/
   stage1-group-formation/         Stage1_4781742   .md + .pdf
   stage2-proposal/                Stage2_dcm103    .md + .pdf
   stage3-development-plan/        Stage3_dcm103    .md + .pdf
-  stage4-initial-demo/            Stage4_dcm103    .md + .pdf
+  stage4-initial-demo/            Stage4_dcm103    .md + .pdf, demo-script .md + .pdf
 ```
 
 Each stage folder holds the submitted report as Markdown (easy to read and diff) and as PDF (the formatted copy).
