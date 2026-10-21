@@ -1,13 +1,15 @@
 Dylan Montgomery  
 Dr. En Cheng  
 Database Management 475/575  
-October 2026
+23 October 2026
 
 # Stage 4: Initial Presentation and Demo Report
 
 **Team:** Lesotho  
 **Captain:** Dylan Montgomery (dcm103@uakron.edu)  
-**Member:** Andrew Styles (as978@uakron.edu)
+**Member:** Andrew Styles (as978@uakron.edu)  
+**Demo:** Wednesday, October 28, 2026  
+**Source code:** https://github.com/dylcmonty/CPSC475
 
 ## 1. Project Title
 
@@ -68,6 +70,8 @@ All reference data is real, collected by our team, and loaded into the database.
 **Grower data.** Plots, crop catalogs, and event log entries come from real users. Once the site is public (planned for the week of November 9), we will email Dr. Cheng and invite classmates and local growers to enter their own records. This will happen at least one week before the final presentation.
 
 ## 5. Functions Developed
+
+The basic functions below are built as a Flask application and are in our repository. Each one is covered by an automated test that runs against PostgreSQL. We will demonstrate them live on October 28.
 
 Every query below is parameterized. Values written as `%(name)s` are bound by psycopg and are never pasted into the SQL string. Every write against grower data is limited to the current farm with `farm_id = %(farm_id)s`, so one farm cannot change another farm's records.
 
@@ -162,7 +166,7 @@ LIMIT 50;
 **Seasonal price curve.** For one crop, this returns the lowest, average, and highest price in each calendar month across all seven seasons. The page draws it as a Chart.js line chart. Counting distinct years shows the user which months are backed by many seasons and which by only one.
 
 ```sql
-SELECT EXTRACT(MONTH FROM v.sale_date)                AS month,
+SELECT EXTRACT(MONTH FROM v.sale_date)::INT           AS month,
        COUNT(*)                                       AS lots,
        COUNT(DISTINCT EXTRACT(YEAR FROM v.sale_date)) AS seasons,
        MIN(v.low_price)                               AS floor_price,
@@ -198,7 +202,7 @@ ORDER BY e.event_date DESC, e.event_id DESC;
 ```sql
 SELECT f.name                          AS farm,
        e.event_date                    AS harvested_on,
-       t.common_name                   AS crop,
+       COALESCE(t.common_name, t.scientific_name) AS crop,
        e.quantity, e.unit,
        p.title                         AS market_product,
        COUNT(l.lot_id)                 AS lots_in_window,
@@ -216,7 +220,7 @@ JOIN market_lot l     ON l.label_norm = a.label_norm
                      AND l.sale_date BETWEEN e.event_date - 30
                                          AND e.event_date + 30
 WHERE e.farm_id = %(farm_id)s
-GROUP BY f.name, e.event_id, e.event_date, t.common_name,
+GROUP BY f.name, e.event_id, e.event_date, t.common_name, t.scientific_name,
          e.quantity, e.unit, p.title
 ORDER BY e.event_date DESC, lots_in_window DESC;
 ```
@@ -298,7 +302,8 @@ A person approves every proposed match on a review screen before it is written. 
 
 | Week | Work |
 | --- | --- |
-| October 26 | Submit this report. Advanced Function 1 page. Source comparison page (one crop in one period, side by side across the four sources). |
+| October 19 | Submit this report (October 23). |
+| October 26 | Stage 4 demo (October 28). Advanced Function 1 page. Source comparison page (one crop in one period, side by side across the four sources). |
 | November 2 | Advanced Function 2 page. Advanced Function 3 ladder and review screen. |
 | November 9 | Stage 5 progress report. Deploy publicly, email Dr. Cheng, and start inviting users. |
 | November 16 | Collect real user data and fix bugs from feedback. |
