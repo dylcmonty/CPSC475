@@ -2,7 +2,7 @@
 
 **When:** Wednesday, October 28, 2026  
 **Length:** 5–8 minutes (aim for 7)  
-**Slides:** the "Almanac: Stage 4 Demo" deck. Speaker notes are on each slide.
+**Slides:** `slides.pdf` in this folder. Notes for each slide are in `speaker-notes.md`.
 
 The assignment requires four things in the demo: real data in the database, insert/update/delete, at least one search query, and the plan for the advanced functions. Each step below is labeled with the requirement it covers.
 

@@ -53,7 +53,8 @@ stages/
   stage1-group-formation/         Stage1_4781742   .md + .pdf
   stage2-proposal/                Stage2_dcm103    .md + .pdf
   stage3-development-plan/        Stage3_dcm103    .md + .pdf
-  stage4-initial-demo/            Stage4_dcm103    .md + .pdf, demo-script .md + .pdf
+  stage4-initial-demo/            Stage4_dcm103    .md + .pdf
+    presentation/                 slides.pdf, demo-script .md + .pdf, speaker-notes.md
 ```
 
 Each stage folder holds the submitted report as Markdown (easy to read and diff) and as PDF (the formatted copy).
@@ -106,7 +107,7 @@ Each test creates a fresh `almanac_test` database on that server, loads the sche
 | 1 | Group formation | Sep | Submitted |
 | 2 | Project proposal | Sep 22 | Submitted |
 | 3 | Development plan | Oct 5 | Submitted |
-| 4 | Initial demo + report | Oct 19 / Oct 26 | Basic functions built; report drafted |
+| 4 | Report + initial demo | Oct 23 / Oct 28 | Report ready; presentation ready |
 | 5 | Progress report | Nov 9 | — |
 | 6 | Final demo | Nov 30 | — |
 | 7 | Final submission | Dec 7 | — |
