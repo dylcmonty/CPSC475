@@ -1,7 +1,7 @@
 # Stage 4 Demo Script
 
 **When:** Wednesday, October 28, 2026  
-**Length:** 5–8 minutes (aim for 7)  
+**Length:** 5 to 8 minutes (aim for 7)  
 **Slides:** `slides.pdf` in this folder. Notes for each slide are in `speaker-notes.md`.
 
 The assignment requires four things in the demo: real data in the database, insert/update/delete, at least one search query, and the plan for the advanced functions. Each step below is labeled with the requirement it covers.
@@ -23,12 +23,12 @@ Do this the day before, then again 15 minutes before you present.
 
 | Time | Slide or page | What to do |
 | --- | --- | --- |
-| 0:00 | Slides 1–2 | Introduce the team and the idea: three kinds of data joined on the taxon. |
-| 0:45 | Slides 3–4 | Real data and the schema. Keep it short; the app shows the rest. |
+| 0:00 | Slides 1-2 | Introduce the team and the idea: three kinds of data joined on the taxon. |
+| 0:45 | Slides 3-4 | Real data and the schema. Keep it short; the app shows the rest. |
 | 1:45 | Slide 5 | "Let's see it running." Switch to the browser. |
-| 1:50 | App | Steps 1–6 below. |
+| 1:50 | App | Steps 1-6 below. |
 | 5:30 | Slide 6 | The four queries; explain the multi-table join. |
-| 6:00 | Slides 7–8 | Advanced functions and timeline. |
+| 6:00 | Slides 7-8 | Advanced functions and timeline. |
 | 7:00 | Slide 9 | Questions. |
 
 ## Live Demo Steps
@@ -63,7 +63,7 @@ On the demo farm's overview:
 
 1. **Harvest vs. market** tab:
 
-   > "For each harvest, this joins the event log, farm, event kind, taxonomy, product lexicon, product aliases and auction lots, and returns what onion sold for within 30 days of our harvest date. It matches on the taxon, so every onion lot counts however the auction worded it."
+   > "For each harvest, this joins the event log, farm, event kind, taxonomy, products, product aliases and auction lots, and returns what onion sold for within 30 days of our harvest date. It matches on the taxon, so every onion lot counts however the auction worded it."
 
 2. Click **Crop search** in the header, search `onion`, open *Allium cepa*:
 
@@ -89,7 +89,7 @@ On the demo farm's overview:
 | Question | Answer |
 | --- | --- |
 | Why is the roll-up "advanced"? | The tree is 12 levels deep and the depth below any node is unknown. A fixed number of joins can't express it; a recursive CTE walks the subtree in one statement. |
-| Why not just match auction labels by substring? | "Wild garlic" is not garlic, and when two products match equally, picking whichever row comes first gives a confident wrong answer. The ladder stops and reports ambiguity instead. |
+| Why not just match auction labels by substring? | "Wild garlic" is not garlic, and when two products match equally, picking whichever row comes first gives a wrong match. The ladder stops and reports ambiguity instead. |
 | Where will grower data come from? | Real users. The site goes public the week of November 9, at least a week before the final demo, and we'll email you when it's live. |
 | How do you prevent SQL injection? | Every value is a bound parameter. The SQL text never contains user input. |
 | Why PostgreSQL rather than MySQL? | Recursive CTEs and window functions, which Advanced Functions 1 and 2 depend on, plus strict CHECK enforcement. |

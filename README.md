@@ -108,9 +108,9 @@ Each test creates a fresh `almanac_test` database on that server, loads the sche
 | 2 | Project proposal | Sep 22 | Submitted |
 | 3 | Development plan | Oct 5 | Submitted |
 | 4 | Report + initial demo | Oct 23 / Oct 28 | Report ready; presentation ready |
-| 5 | Progress report | Nov 9 | — |
-| 6 | Final demo | Nov 30 | — |
-| 7 | Final submission | Dec 7 | — |
+| 5 | Progress report | Nov 9 | Not started |
+| 6 | Final demo | Nov 30 | Not started |
+| 7 | Final submission | Dec 7 | Not started |
 
 ## Advanced Functions
 

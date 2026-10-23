@@ -8,8 +8,7 @@ Database Management 475/575
 **Team:** Lesotho  
 **Captain:** Dylan Montgomery (dcm103@uakron.edu)  
 **Member:** Andrew Styles (as978@uakron.edu)  
-**Demo:** Wednesday, October 28, 2026  
-**Source code:** https://github.com/dylcmonty/CPSC475
+**Demo:** Wednesday, October 28, 2026
 
 ## 1. Project Title
 
@@ -45,7 +44,6 @@ We use PostgreSQL 16 for the live database because our advanced functions need r
 | SQL | Written by hand, no ORM. All user input is passed as bound parameters. |
 | Charts | Chart.js |
 | Data loaders | Python with pdfplumber (PDF reports) and requests/BeautifulSoup (HTML reports) |
-| Source control | Git and GitHub |
 | Deployment (planned) | Gunicorn behind Nginx on a Linux VPS with HTTPS |
 
 ## 4. Where and How We Got Real Data
@@ -65,13 +63,13 @@ All reference data is real, collected by our team, and loaded into the database.
 
 **How the market data was loaded.** The loader downloads each published report (PDF or web page) and pulls out every lot line: date, description, unit, quantity, and low, high, and average price. Prices are converted to whole cents so no rounding error builds up. Each description is normalized (lowercased, punctuation and extra spaces removed) into `label_norm`, which is the key used to match it to a product. Each row is then inserted. If a row breaks a CHECK constraint, it goes into `market_lot_quarantine` along with the reason, and the constraint stays as written. The 53 quarantined rows are real errors in the source reports. For example, one pumpkin lot was listed with a low of $0.10, a high of $0.30, and an average of $3.18.
 
-**Coverage.** 44,263 of the 47,516 lots (93.2%) match a product. The other 3,253 have descriptions no product claims yet, such as "10″ Hanging Basket." The `v_resolution_coverage` view reports this number overall and for each source. Advanced Function 3 is designed to raise it.
+**Coverage.** 44,263 of the 47,516 lots (93.2%) match a product. The other 3,253 have descriptions no product claims yet, such as "10 inch Hanging Basket." The `v_resolution_coverage` view reports this number overall and for each source. Advanced Function 3 is designed to raise it.
 
 **Grower data.** Plots, crop catalogs, and event log entries come from real users. Once the site is public (planned for the week of November 9), we will email Dr. Cheng and invite classmates and local growers to enter their own records. This will happen at least one week before the final presentation.
 
 ## 5. Functions Developed
 
-The basic functions below are built as a Flask application and are in our repository. Each one is covered by an automated test that runs against PostgreSQL. We will demonstrate them live on October 28.
+The basic functions below are built as a Flask application. Each one is covered by an automated test that runs against PostgreSQL. We will demonstrate them live on October 28.
 
 Every query below is parameterized. Values written as `%(name)s` are bound by psycopg and are never pasted into the SQL string. Every write against grower data is limited to the current farm with `farm_id = %(farm_id)s`, so one farm cannot change another farm's records.
 
@@ -79,7 +77,7 @@ Every query below is parameterized. Values written as `%(name)s` are bound by ps
 
 The three grower tables each support full create, edit, and delete.
 
-**Farm events (`farm_event`)** are the main write surface. Each event records a date, an event kind (plant, harvest, sale, loss), a taxon, an optional plot, an optional product, and an optional quantity with a unit.
+**Farm events (`farm_event`)** are the main table growers write to. Each event records a date, an event kind (plant, harvest, sale, loss), a taxon, an optional plot, an optional product, and an optional quantity with a unit.
 
 ```sql
 -- Insert
@@ -197,7 +195,7 @@ WHERE e.farm_id = %(farm_id)s
 ORDER BY e.event_date DESC, e.event_id DESC;
 ```
 
-**Harvest compared with market price (multi-table join).** This is our main join. For each harvest a farm has recorded, it finds what that crop sold for at auction within 30 days on either side of the harvest date. It joins the event log, farm, event kind, taxonomy, product lexicon, and market lot tables, plus `product_alias`, which links each auction lot to its product.
+**Harvest compared with market price (multi-table join).** This is our main join. For each harvest a farm has recorded, it finds what that crop sold for at auction within 30 days on either side of the harvest date. It joins the event log, farm, event kind, taxon, product, and market lot tables, plus `product_alias`, which links each auction lot to its product.
 
 ```sql
 SELECT f.name                          AS farm,
@@ -229,13 +227,13 @@ Only events whose kind has `is_yield = TRUE` (harvests) are included. Matching o
 
 ## 6. Planned Advanced Functions
 
-We plan three advanced functions. Two meet the 475 requirement, and the third meets the 575 requirement. All three rely on the taxonomy being a real hierarchy linked to the price data.
+We plan three advanced functions. Two meet the 475 requirement, and the third meets the 575 requirement. All three use the taxonomy and its link to the price data.
 
 ### Advanced Function 1: Recursive Taxonomic Price Roll-up (week of October 26)
 
 **Problem.** A user picks any node in the taxonomy, such as a genus, family, or order, and wants prices for everything under it. The tree is twelve levels deep, and the number of levels below a node isn't known in advance, so a fixed number of joins can't express the query. Running one query per level from the application would need many round trips and would move the work out of the database.
 
-**Approach.** A recursive common table expression starts at the chosen node and repeatedly joins children on `parent_taxon_id` until it reaches the bottom of the subtree. The result is joined through the product lexicon to the price data and aggregated, all in one statement:
+**Approach.** A recursive common table expression starts at the chosen node and repeatedly joins children on `parent_taxon_id` until it reaches the bottom of the subtree. The result is joined through the product table to the price data and aggregated, all in one statement:
 
 ```sql
 WITH RECURSIVE subtree AS (
@@ -272,7 +270,7 @@ ORDER BY lots DESC;
 2. Select every priced lot whose day of year falls inside the requested window, in any year. The window may wrap past December 31.
 3. For each product, compute the number of lots, the number of distinct years, the mean price, and the standard deviation.
 4. Drop any product with fewer than 12 lots or fewer than 2 distinct years.
-5. Compute a stability score that lowers a crop's mean price by its volatility. We currently plan to use mean ÷ (1 + coefficient of variation).
+5. Compute a stability score that lowers a crop's mean price by its volatility. We plan to use the mean divided by (1 + coefficient of variation).
 6. Rank the products with `RANK() OVER (ORDER BY score DESC)`.
 
 Every candidate must resolve to a taxon. Our first version ranked "Watering can" first, because these auctions also sell merchandise. Requiring a taxon removes merchandise without a hand-written exclusion list.
@@ -292,9 +290,9 @@ Every candidate must resolve to a taxon. Our first version ranked "Watering can"
 3. A token match against taxonomic common names.
 4. A token match against scientific binomials.
 
-At each rung, exactly one candidate means a match is proposed. Zero candidates sends the label to the next rung. More than one candidate stops the search and marks the label **ambiguous**, so it never falls through to a looser rung that would give a confident wrong answer. "Not found" and "ambiguous" are reported separately because they are fixed in different ways.
+At each rung, exactly one candidate means a match is proposed. Zero candidates sends the label to the next rung. More than one candidate stops the search and marks the label **ambiguous**, so a weaker rung never gets the chance to make a wrong match. "Not found" and "ambiguous" are reported separately because they are fixed in different ways.
 
-A person approves every proposed match on a review screen before it is written. The approval writes one row to `product_alias`, recording the rung that proposed it in `match_rung`. This instantly links every past and future lot with that label to the product. The ladder reads from the taxonomy and product tables and has no hard-coded rules for particular crops, so it keeps working as new sources and labels arrive.
+A person approves every proposed match on a review screen before it is written. The approval writes one row to `product_alias`, recording the rung that proposed it in `match_rung`. This links every past and future lot with that label to the product. The ladder reads from the taxonomy and product tables and has no hard-coded rules for particular crops, so it keeps working as new sources and labels arrive.
 
 **How we will measure it.** We will report the `v_resolution_coverage` percentage before and after, overall and for each source, along with how many labels ended as ambiguous and how many as not found.
 

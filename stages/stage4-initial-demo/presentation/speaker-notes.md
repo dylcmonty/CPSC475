@@ -8,7 +8,7 @@ Introduce the team and the project in one sentence: Almanac is a farm record boo
 
 ## 2. Three kinds of data, one shared key
 
-Farm software like Tend or Farmbrite keeps records but has no prices and treats crops as free text. USDA Market News and auction reports have prices but no connection to any farm. Plant databases have taxonomy but neither. Almanac joins all three on the taxon, so the question “what is the crop I just harvested worth right now” is a query, not a lookup.
+Farm software like Tend or Farmbrite keeps records but has no prices and treats crops as free text. USDA Market News and auction reports have prices but no connection to any farm. Plant databases have taxonomy but neither. Almanac joins all three on the taxon, so a grower can ask what a crop they just harvested is worth and get the answer from one query.
 
 ## 3. Collected, cleaned and loaded
 
@@ -28,7 +28,7 @@ Explain the join. It matches on taxon_id, not on names, so a harvest recorded as
 
 ## 7. Three things no farm app can do
 
-1: The tree is 12 levels deep and the depth below any node is unknown, so a fixed number of joins cannot do it. The recursive CTE walks the subtree in one round trip. Already tested: Asparagales walks 198 nodes, finds 6 with priced products, 2,679 lots; onion alone is 1,382 lots at a $9.63 mean. 2: Day-of-year window across years, at least 12 lots in 2 or more years, score = mean divided by (1 + coefficient of variation), ranked with RANK() OVER. Every candidate must resolve to a taxon, which is how we stopped “Watering can” from ranking first. 3: Four rungs from exact slug down to scientific name. One candidate binds, zero falls through, more than one stops as ambiguous. A person confirms every match. Measured by the coverage percentage going up.
+1: The tree is 12 levels deep and the depth below any node is unknown, so a fixed number of joins cannot do it. The recursive CTE walks the subtree in one round trip. Already tested: Asparagales walks 198 nodes, finds 6 with priced products, 2,679 lots; onion alone is 1,382 lots at a $9.63 mean. 2: Day-of-year window across years, at least 12 lots in 2 or more years, score = mean divided by (1 + coefficient of variation), ranked with RANK() OVER. Every candidate must resolve to a taxon, which is how we stopped "Watering can" from ranking first. 3: Four rungs from exact slug down to scientific name. One candidate binds, zero falls through, more than one stops as ambiguous. A person confirms every match. Measured by the coverage percentage going up.
 
 ## 8. From here to the final demo
 
@@ -36,4 +36,4 @@ The site goes public at least a week before the final presentation, as the assig
 
 ## 9. Questions?
 
-Likely questions. Why is the roll-up advanced? Unknown depth: needs a recursive CTE, not a fixed number of joins. Why not match labels by substring? “Wild garlic” is not garlic, and two equal matches must not be resolved by whichever row comes first. Where does grower data come from? Real users after the site goes public on Nov 9. How do you stop SQL injection? Every value is a bound parameter.
+Likely questions. Why is the roll-up advanced? Unknown depth: needs a recursive CTE, not a fixed number of joins. Why not match labels by substring? "Wild garlic" is not garlic, and two equal matches must not be resolved by whichever row comes first. Where does grower data come from? Real users after the site goes public on Nov 9. How do you stop SQL injection? Every value is a bound parameter.
