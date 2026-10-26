@@ -53,6 +53,7 @@ INSERT INTO market_lot (observer_id, sale_date, raw_label, label_norm, unit, qua
     (1, '2025-07-15', 'Onions Yellow 50lb', 'onions yellow 50lb', 'bag', 5, 900, 1300, 1100),
     (2, '2025-08-15', 'ONIONS YELLOW 50LB', 'onions yellow 50lb', 'bag', 8, 700, 1100, 900),
     (1, '2025-07-01', 'Garlic', 'garlic', 'lb', 20, 300, 500, 400),
+    (1, '2025-07-25', 'Onions Yellow 50lb', 'onions yellow 50lb', 'peck', 4, 300, 500, 400),
     (2, '2025-07-02', '10" Hanging Basket', '10 hanging basket', 'each', 3, 1500, 2500, 2000);
 
 INSERT INTO farm (farm_id, name, region_id) OVERRIDING SYSTEM VALUE VALUES

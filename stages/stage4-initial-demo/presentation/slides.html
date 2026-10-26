@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Almanac · Stage 4</title>
+<!-- Source for slides.pdf. Print with:
+     google-chrome --headless --no-pdf-header-footer --print-to-pdf=slides.pdf slides.html -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1f3326; --ink: #1e2a20; --muted: #4a5244; --rust: #93491a; --gold: #e3b47a;
+    --paper: #f4f0e6; --sand: #ece6d6; --card: #fbf8f0; --rule: #d9d3c2; --mint: #e7efe3;
+  }
+  @page { size: 1920px 1080px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Public Sans", sans-serif; color: var(--ink); background: var(--paper); }
+  section { width: 1920px; height: 1080px; padding: 128px 128px 0; position: relative;
+            page-break-after: always; overflow: hidden; background: var(--paper); }
+  section.sand { background: var(--sand); }
+  section.dark { background: var(--green); color: var(--paper); }
+  .eyebrow { font-size: 24px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+             color: var(--rust); margin-bottom: 12px; }
+  .dark .eyebrow { color: var(--gold); }
+  h1 { font-family: "Newsreader", serif; font-weight: 600; font-size: 78px; line-height: 1.1; margin-bottom: 52px; }
+  .lede { font-size: 29px; line-height: 1.5; max-width: 1560px; }
+  .cards { display: grid; gap: 32px; margin-bottom: 44px; }
+  .cards.three { grid-template-columns: repeat(3, 1fr); }
+  .cards.two { grid-template-columns: repeat(2, 1fr); }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 40px 38px; }
+  .card .tag { font-size: 24px; font-weight: 700; color: var(--rust); text-transform: uppercase; margin-bottom: 16px; }
+  .card h2 { font-size: 37px; font-weight: 700; margin-bottom: 18px; }
+  .card p { font-size: 27px; line-height: 1.45; color: var(--muted); }
+  .card p + p { margin-top: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-bottom: 40px; }
+  .stat { border-top: 5px solid var(--ink); padding-top: 18px; }
+  .stat b { display: block; font-family: "Newsreader", serif; font-weight: 600; font-size: 72px; line-height: 1.1; }
+  .stat span { font-size: 25px; color: var(--muted); }
+  .note { font-size: 25px; line-height: 1.5; margin-bottom: 18px; max-width: 1660px; }
+  .stack { font-size: 25px; color: var(--muted); }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 48px 56px; }
+  .step { border-left: 5px solid var(--gold); padding-left: 28px; }
+  .step h2 { font-size: 33px; font-weight: 700; margin-bottom: 12px; }
+  .step p { font-size: 26px; line-height: 1.45; color: #cfdccf; }
+  table { width: 100%; border-collapse: collapse; font-size: 25px; margin-bottom: 36px; }
+  th { text-align: left; font-weight: 700; padding: 10px 14px; border-bottom: 2px solid var(--ink); }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; line-height: 1.35; }
+  td:first-child { width: 28%; }
+  tr.hl td { background: var(--mint); font-weight: 700; }
+  .title { display: flex; flex-direction: column; justify-content: center; height: 100%; padding-bottom: 128px; }
+  .title .eyebrow { position: absolute; top: 128px; }
+  .title h1 { font-size: 150px; margin-bottom: 26px; }
+  .title .lede { color: #cfdccf; font-size: 34px; }
+  .footer { position: absolute; bottom: 120px; left: 128px; font-size: 24px; color: #cfdccf; }
+  .questions { display: flex; flex-direction: column; justify-content: center; height: 100%; padding-bottom: 128px; }
+  .questions h1 { font-size: 110px; margin-bottom: 30px; }
+  .questions p { font-size: 32px; color: #cfdccf; margin-bottom: 18px; }
+  .questions a { font-size: 28px; color: var(--gold); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<section class="dark">
+  <div class="title">
+    <div class="eyebrow">Database Management 475/575 · Stage 4</div>
+    <h1>Almanac</h1>
+    <p class="lede">A farm record book that knows what your crops are worth</p>
+  </div>
+  <div class="footer">Team Lesotho · Dylan Montgomery &amp; Andrew Styles · October 28, 2026</div>
+</section>
+
+<section>
+  <div class="eyebrow">The idea</div>
+  <h1>Three kinds of data, one shared key</h1>
+  <div class="cards three">
+    <div class="card"><h2>Farm record book</h2>
+      <p>What a grower planted, harvested, sold or lost, on which plot and when.</p></div>
+    <div class="card"><h2>Auction prices</h2>
+      <p>What each crop actually sold for at Ohio produce auctions, sale day by sale day, 2019 to 2026.</p></div>
+    <div class="card"><h2>Plant taxonomy</h2>
+      <p>A tree that identifies every crop precisely: order, family, genus, species, variety.</p></div>
+  </div>
+  <p class="lede">Every event and every price resolves to a <b>taxon</b>, so a grower’s history and the market’s history can be queried together.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Real data</div>
+  <h1>Collected, cleaned and loaded</h1>
+  <div class="stats">
+    <div class="stat"><b>33,667</b><span>auction prices</span></div>
+    <div class="stat"><b>520</b><span>sale days, 2019–2026</span></div>
+    <div class="stat"><b>2,993</b><span>taxonomy nodes</span></div>
+    <div class="stat"><b>107</b><span>real Ohio farms</span></div>
+  </div>
+  <p class="note"><b>Prices:</b> USDA AMS Market News reports for the Mount Hope Auction (391 sale days, 2019–2026) and County Line Produce Auction market reports (219 sale days, 2024–2026).</p>
+  <p class="note"><b>Taxonomy:</b> GBIF Backbone Taxonomy. <b>Farms:</b> OpenStreetMap, with counties from the US Census.</p>
+  <p class="note"><b>Quality:</b> 26 rows failed a CHECK constraint (average outside its own low–high range) and sit in a quarantine table with the reason. 85.8% of prices already match a product. 237 unit spellings map to 35 standard units; pecks and bushels are never averaged together.</p>
+</section>
+
+<section class="sand">
+  <div class="eyebrow">Database</div>
+  <h1>12 tables, 15 foreign keys, 2 views</h1>
+  <div class="cards two">
+    <div class="card"><h2>Reference data · 8 tables</h2>
+      <p>observer, region, taxon, product, product_alias, market_lot, market_lot_quarantine, event_kind</p>
+      <p><b style="color:var(--ink)">taxon</b> and <b style="color:var(--ink)">region</b> point to themselves: two hierarchies.</p></div>
+    <div class="card"><h2>Grower data · 4 tables</h2>
+      <p>farm, plot, crop_catalog, farm_event</p>
+      <p>Rules live in the schema: deleting a plot keeps its events; a taxon in use can’t be deleted; a quantity needs a unit.</p></div>
+  </div>
+  <p class="stack">PostgreSQL 16 · Python 3 · Flask · psycopg 3 · hand-written, parameterized SQL (no ORM) · Chart.js</p>
+</section>
+
+<section class="dark">
+  <div class="eyebrow">Live demo</div>
+  <h1>The basic functions, in the app</h1>
+  <div class="steps">
+    <div class="step"><h2>1 · Real data</h2><p>Home page: row counts for every table and match rate per source.</p></div>
+    <div class="step"><h2>2 · Insert</h2><p>Add a crop, a plot, and a harvest event to a real farm.</p></div>
+    <div class="step"><h2>3 · Update and delete</h2><p>Edit the harvest; delete the plot and watch its event survive.</p></div>
+    <div class="step"><h2>4 · Search</h2><p>Crop search, the price curve, and harvest vs. market price.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Search</div>
+  <h1>Four queries, four questions</h1>
+  <table>
+    <tr><th>Page</th><th>Question it answers</th></tr>
+    <tr><td>Crop search</td><td>Which taxa or products match this text? Ranked by how much price evidence each has.</td></tr>
+    <tr><td>Price curve</td><td>What is this crop’s floor, mean and ceiling price in each month, across all seasons?</td></tr>
+    <tr><td>Activity history</td><td>What did this farm do in this date range, for this event kind and crop?</td></tr>
+    <tr class="hl"><td>Harvest vs. market</td><td>For each harvest, what did that crop sell for at auction within 30 days?</td></tr>
+  </table>
+  <p class="stack">The last one is our multi-table join: farm_event, farm, event_kind, taxon, product, product_alias and market_lot.</p>
+</section>
+
+<section class="sand">
+  <div class="eyebrow">Next: advanced functions</div>
+  <h1>Three things no farm app can do</h1>
+  <div class="cards three">
+    <div class="card"><div class="tag">1 · Recursive CTE</div><h2>Taxonomic price roll-up</h2>
+      <p>Pick any node, such as a family or order, and price everything beneath it, at any depth, in one query.</p></div>
+    <div class="card"><div class="tag">2 · Window function</div><h2>Crop decision engine</h2>
+      <p>Rank crops for a planting window across all years by price, discounted for volatility.</p></div>
+    <div class="card"><div class="tag">3 · Data resolution</div><h2>Label resolution ladder</h2>
+      <p>Fetch and parse new reports automatically, then match the 1,445 unmatched labels in four rungs; stop on ambiguity, never guess.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Plan</div>
+  <h1>From here to the final demo</h1>
+  <table>
+    <tr><th>Week of</th><th>Work</th></tr>
+    <tr><td>Oct 26</td><td>Advanced Function 1 page; source comparison page</td></tr>
+    <tr><td>Nov 2</td><td>Advanced Functions 2 and 3, with the review screen</td></tr>
+    <tr class="hl"><td>Nov 9</td><td>Stage 5 report; site goes public and we start inviting growers</td></tr>
+    <tr><td>Nov 16</td><td>Collect real user records; fix bugs from feedback</td></tr>
+    <tr><td>Nov 23</td><td>Feature freeze, full testing, rehearsal</td></tr>
+    <tr><td>Nov 30</td><td>Final demo: basic functions and all three advanced functions</td></tr>
+  </table>
+</section>
+
+<section class="dark">
+  <div class="questions">
+    <h1>Questions?</h1>
+    <p>Almanac · Team Lesotho</p>
+    <a>github.com/dylcmonty/CPSC475</a>
+  </div>
+</section>
+
+</body>
+</html>

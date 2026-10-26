@@ -3,17 +3,17 @@
 {% block content %}
 {% include "_farm_nav.html" %}
 <h1>Harvest vs. market price</h1>
-<p>For each harvest, what the same crop sold for at auction within 30 days either side of the harvest date.</p>
+<p>For each harvest, what the same crop sold for at auction within 30 days either side of the harvest date, per unit the auction sold it in.</p>
 <table>
-  <thead><tr><th>Harvested</th><th>Crop</th><th class="num">Quantity</th><th>Market product</th>
+  <thead><tr><th>Harvested</th><th>Crop</th><th class="num">Quantity</th><th>Market product</th><th>Price per</th>
     <th class="num">Lots</th><th class="num">Low</th><th class="num">Mean</th><th class="num">High</th></tr></thead>
   <tbody>
   {% for r in rows %}
     <tr><td>{{ r.harvested_on }}</td><td>{{ r.crop }}</td><td class="num">{{ r.quantity|blank }} {{ r.unit|blank }}</td>
-        <td>{{ r.market_product }}</td><td class="num">{{ r.lots_in_window }}</td>
+        <td>{{ r.market_product }}</td><td>{{ r.market_unit or "unspecified" }}</td><td class="num">{{ r.lots_in_window }}</td>
         <td class="num">{{ r.low_price|money }}</td><td class="num">{{ r.mean_price|money }}</td><td class="num">{{ r.high_price|money }}</td></tr>
   {% else %}
-    <tr><td colspan="8" class="empty">No harvests with auction prices in the 30-day window. Record a harvest to see it here.</td></tr>
+    <tr><td colspan="9" class="empty">No harvests with auction prices in the 30-day window. Record a harvest to see it here.</td></tr>
   {% endfor %}
   </tbody>
 </table>

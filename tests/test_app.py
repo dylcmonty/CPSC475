@@ -43,6 +43,15 @@ def test_price_curve_groups_by_month_across_seasons(client):
     assert "$8.00" in page and "$10.50" in page and "$13.00" in page
 
 
+def test_price_curve_is_drawn_per_unit(client):
+    page = client.get("/taxa/4").get_data(as_text=True)
+    assert "per <strong>bag</strong>" in page          # the most common unit
+    assert "unit=peck" in page                           # the other unit is offered
+    page = client.get("/taxa/4", query_string={"unit": "peck"}).get_data(as_text=True)
+    assert "per <strong>peck</strong>" in page
+    assert "$4.00" in page and "$10.50" not in page    # bag prices are not mixed in
+
+
 def test_unknown_taxon_is_404(client):
     assert client.get("/taxa/999").status_code == 404
 
@@ -194,6 +203,14 @@ def test_harvest_vs_market_uses_30_day_window(client):
     assert "Yellow onion" in page
     assert '<td class="num">2</td>' in page
     assert "$7.00" in page and "$13.00" in page and "$10.00" in page
+
+
+def test_harvest_vs_market_keeps_units_apart(client):
+    add_crop(client, 4)
+    add_event(client, event_date="2025-07-20", quantity="40", unit="lb")
+    page = client.get("/farms/1/harvest-prices").get_data(as_text=True)
+    assert "<td>bag</td>" in page and "<td>peck</td>" in page
+    assert "$4.00" in page                               # the peck lot, on its own row
 
 
 def test_plantings_are_not_in_harvest_report(client):

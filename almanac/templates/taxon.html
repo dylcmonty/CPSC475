@@ -8,7 +8,15 @@
 
 <h2>Seasonal price curve</h2>
 {% if curve %}
-<p>Lowest, average and highest auction price in each month, across every season on record.</p>
+<p>Lowest, average and highest auction price in each month, across every season on record, per <strong>{{ unit }}</strong>.</p>
+{% if units|length > 1 %}
+<p class="units">Price per:
+  {% for u in units %}{% set name = u.unit or unspecified %}
+  {% if name == unit %}<strong>{{ name }}</strong>{% else %}<a href="{{ url_for('main.taxon_detail', taxon_id=taxon.taxon_id, unit=name) }}">{{ name }}</a>{% endif %}
+  ({{ "{:,}".format(u.lots) }}){% if not loop.last %} · {% endif %}
+  {% endfor %}
+</p>
+{% endif %}
 <div class="chart"><canvas id="curve" aria-label="Seasonal price curve"></canvas></div>
 <table>
   <thead><tr><th>Month</th><th class="num">Lots</th><th class="num">Seasons</th><th class="num">Floor</th><th class="num">Mean</th><th class="num">Ceiling</th></tr></thead>

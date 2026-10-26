@@ -16,7 +16,7 @@ Almanac: A Taxonomy-Linked Farm Record Book with Historical Market Pricing
 
 ## 2. Project Summary
 
-Almanac is a web application where a grower keeps a record book of what they planted, harvested, sold, or lost. Every entry is tied to a node in a 4,118-node plant taxonomy. The same taxonomy indexes 47,516 real produce auction prices from four Ohio market report sources, covering 2019 to 2026. Because of that shared key, Almanac can tell a grower what a crop has sold for in a given part of the year, how steady that price has been, and which crops in a plant family have been the best choices for a given planting window. A normal farm record book can't answer those questions.
+Almanac is a web application where a grower keeps a record book of what they planted, harvested, sold, or lost. Every entry is tied to a node in a 2,993-node plant taxonomy. The same taxonomy indexes 33,667 real produce auction prices from two Ohio produce auctions, covering 2019 to 2026. Because of that shared key, Almanac can tell a grower what a crop has sold for in a given part of the year, how steady that price has been, and which crops in a plant family have been the best choices for a given planting window. A normal farm record book can't answer those questions.
 
 ## 3. Databases and Software Platforms
 
@@ -32,7 +32,7 @@ The database has twelve tables, fifteen foreign keys, and two views. The full sc
 
 `region` and `taxon` reference themselves to form hierarchies. `taxon` stores both a parent pointer, used by recursive queries, and a materialized path such as `1.4.37.210`, used for fast "everything under this node" lookups. Data quality rules are enforced by the database with CHECK constraints, not by application code. For example, an auction lot's average price must lie between its low and high price, and an event with a quantity must also have a unit.
 
-We use PostgreSQL 16 for the live database because our advanced functions need recursive common table expressions and window functions. We use SQLite 3 for local development and tests. The same DDL runs on both except for the auto-increment declaration and the day-of-year function.
+We use PostgreSQL 16 for the live database because our advanced functions need recursive common table expressions and window functions. Our data loaders write their output to a SQLite 3 file with the same tables and columns, and a short import script copies it into PostgreSQL, keeping every key.
 
 ### Software Platform
 
@@ -40,30 +40,34 @@ We use PostgreSQL 16 for the live database because our advanced functions need r
 | --- | --- |
 | Language | Python 3.12 |
 | Web framework | Flask 3 with Jinja2 server-rendered templates |
-| Database driver | psycopg 3 (PostgreSQL), sqlite3 (development) |
+| Database driver | psycopg 3 (PostgreSQL); sqlite3 in the data loaders |
 | SQL | Written by hand, no ORM. All user input is passed as bound parameters. |
 | Charts | Chart.js |
-| Data loaders | Python with pdfplumber (PDF reports) and requests/BeautifulSoup (HTML reports) |
+| Data loaders | Python 3 standard library; pdftotext (Poppler) for the PDF reports; the GBIF, OpenStreetMap Overpass and US Census geocoder web APIs |
 | Deployment (planned) | Gunicorn behind Nginx on a Linux VPS with HTTPS |
 
 ## 4. Where and How We Got Real Data
 
-All reference data is real, collected by our team, and loaded into the database.
+All reference data is real and comes from public sources. Our own scripts, in the `loaders/` folder of the repository, download it and build the database from it, so anyone can rebuild it with five commands.
 
 | Table | Rows | Source |
 | --- | --- | --- |
-| `market_lot` | 47,516 | Published sale reports from County Line Produce Auction, Mt. Hope Auction, USDA AMS Market News (Mount Hope), and Geauga Growers Produce Auction. 2019-05-03 to 2026-07-22, 560 trading days. |
-| `market_lot_quarantine` | 53 | Lots from the same reports that failed a CHECK constraint, kept with the reason. |
-| `observer` | 4 | The four sources above, with domain and reporting granularity (per lot or per product per day). |
-| `taxon` | 4,118 | A 12-level plant taxonomy compiled from USDA PLANTS and GBIF. |
-| `product` | 217 | Canonical products we built by grouping the different ways auctions describe the same item. |
-| `product_alias` | one per resolved label | Maps each normalized auction description to a product. |
-| `farm` | 238 | Real Ohio farm operations from public listings, 131 of them with live web domains. |
-| `region` | 2,818 | Administrative geography, including all 88 Ohio counties under one Ohio node. |
+| `market_lot` | 33,667 | Two Ohio produce auctions, 520 sale days from 2019-05-03 to 2026-10-22. USDA AMS Market News publishes a report of prices to growers at the Mount Hope Auction (report AM_FV160): we downloaded every report in the USDA archive, 391 sale days from 2019 to 2026. County Line Produce Auction posts a PDF market report for each sale: we downloaded all of them, 219 sale days from 2024 to 2026. |
+| `market_lot_quarantine` | 26 | Prices from the same reports that failed a CHECK constraint, kept with the reason. |
+| `observer` | 2 | The two sources above, with their domains. Both report one price line per product per sale day. |
+| `taxon` | 2,993 | The GBIF Backbone Taxonomy. For each crop we load its full classification from kingdom to species, its accepted subspecies and varieties, and the other species in its genus that have an English common name. Ten crops that GBIF lumps into one species, such as broccoli and cabbage in *Brassica oleracea*, sit under their cultivar groups (for example *Brassica oleracea* Italica Group), as named under the International Code of Nomenclature for Cultivated Plants. |
+| `product` | 95 | Canonical products we defined, each tied to the taxon it comes from, at genus, species, subspecies, variety or cultivar group level. |
+| `product_alias` | one per matched label | Maps each normalized auction description to a product. |
+| `farm` | 107 | Named Ohio farms, farm markets and orchards mapped in OpenStreetMap, each placed in its county with the US Census geocoder. |
+| `region` | 90 | The United States, Ohio, and Ohio's 88 counties from the Census Bureau's 2020 county list. |
 
-**How the market data was loaded.** The loader downloads each published report (PDF or web page) and pulls out every lot line: date, description, unit, quantity, and low, high, and average price. Prices are converted to whole cents so no rounding error builds up. Each description is normalized (lowercased, punctuation and extra spaces removed) into `label_norm`, which is the key used to match it to a product. Each row is then inserted. If a row breaks a CHECK constraint, it goes into `market_lot_quarantine` along with the reason, and the constraint stays as written. The 53 quarantined rows are real errors in the source reports. For example, one pumpkin lot was listed with a low of $0.10, a high of $0.30, and an average of $3.18.
+**How the market data was loaded.** The USDA reports are plain text and County Line's are PDFs, and both are typed by hand, so the format drifts. The USDA archive alone writes the sale date at least five different ways ("Prices for Wednesday, September 2, 2026", "PRICES TO GROWERS FOR WEDNESDAY 05-JUNE-2019", "Monday 14-August, 2023"). Our parsers read each price line by its shape (a description followed by a quantity and three prices) rather than by fixed column positions, so they keep working as the layout changes. For each line we record the date, description, unit, quantity, and low, high and average price. Prices are converted to whole cents so no rounding error builds up.
 
-**Coverage.** 44,263 of the 47,516 lots (93.2%) match a product. The other 3,253 have descriptions no product claims yet, such as "10 inch Hanging Basket." The `v_resolution_coverage` view reports this number overall and for each source. Advanced Function 3 is designed to raise it.
+Units are standardized. The reports write the same unit many ways ("1/2 bushel cartons", "half bushel", "1/2 bushel ctns", and misspellings such as "pecl"). We map 237 different spellings to 35 standard units. A price per peck and a price per bushel are never averaged together: every query that summarizes prices groups them by unit.
+
+Each description is normalized (lowercased, with punctuation and extra spaces removed) into `label_norm`, the key used to match it to a product. If a row breaks a CHECK constraint, it goes into `market_lot_quarantine` with the reason, and the constraint stays as written. The 26 quarantined rows are real errors in the source reports. For example, one cabbage line was reported with a low of $1.10, a high of $2.10 and an average of $19.50. Lines the parsers cannot read are listed rather than guessed: seven USDA files with no prices (off-season notices, and one report dated "74-SEPTEMBER-2021"), and six lines with typos such as a price written "9 80".
+
+**Coverage.** 28,872 of the 33,667 prices (85.8%) match a product: 95.0% of the USDA prices and 82.2% of County Line's. The other 4,795 prices carry 1,445 descriptions no product claims yet. Many are things that are not one crop, such as "Hanging basket combo 12" or "Pumpkins fall mix"; others are less common flowers and misspellings. The `v_resolution_coverage` view reports this number overall and for each source. Advanced Function 3 is designed to raise it.
 
 **Grower data.** Plots, crop catalogs, and event log entries come from real users. Once the site is public (planned for the week of November 9), we will email Dr. Cheng and invite classmates and local growers to enter their own records. This will happen at least one week before the final presentation.
 
@@ -161,7 +165,7 @@ LIMIT 50;
 
 `%(pattern)s` is the user's text wrapped in `%` wildcards by the application.
 
-**Seasonal price curve.** For one crop, this returns the lowest, average, and highest price in each calendar month across all seven seasons. The page draws it as a Chart.js line chart. Counting distinct years shows the user which months are backed by many seasons and which by only one.
+**Seasonal price curve.** For one crop, this returns the lowest, average, and highest price in each calendar month across all eight seasons, in one unit at a time. The page shows the crop's most common unit first and links to the others (onion: peck, box, bushel, bunch). The page draws the curve as a Chart.js line chart. Counting distinct years shows the user which months are backed by many seasons and which by only one.
 
 ```sql
 SELECT EXTRACT(MONTH FROM v.sale_date)::INT           AS month,
@@ -172,6 +176,7 @@ SELECT EXTRACT(MONTH FROM v.sale_date)::INT           AS month,
        MAX(v.high_price)                              AS ceiling_price
 FROM v_priced_lot v
 WHERE v.taxon_id = %(taxon_id)s
+  AND v.unit IS NOT DISTINCT FROM CAST(%(unit)s AS VARCHAR)
 GROUP BY EXTRACT(MONTH FROM v.sale_date)
 ORDER BY month;
 ```
@@ -195,7 +200,7 @@ WHERE e.farm_id = %(farm_id)s
 ORDER BY e.event_date DESC, e.event_id DESC;
 ```
 
-**Harvest compared with market price (multi-table join).** This is our main join. For each harvest a farm has recorded, it finds what that crop sold for at auction within 30 days on either side of the harvest date. It joins the event log, farm, event kind, taxon, product, and market lot tables, plus `product_alias`, which links each auction lot to its product.
+**Harvest compared with market price (multi-table join).** This is our main join. For each harvest a farm has recorded, it finds what that crop sold for at auction within 30 days on either side of the harvest date, with one row per unit the auction sold it in. It joins the event log, farm, event kind, taxon, product, and market lot tables, plus `product_alias`, which links each auction lot to its product.
 
 ```sql
 SELECT f.name                          AS farm,
@@ -203,6 +208,7 @@ SELECT f.name                          AS farm,
        COALESCE(t.common_name, t.scientific_name) AS crop,
        e.quantity, e.unit,
        p.title                         AS market_product,
+       l.unit                          AS market_unit,
        COUNT(l.lot_id)                 AS lots_in_window,
        ROUND(AVG(l.avg_cents) / 100.0, 2) AS mean_price,
        MIN(l.low_cents)  / 100.0       AS low_price,
@@ -219,7 +225,7 @@ JOIN market_lot l     ON l.label_norm = a.label_norm
                                          AND e.event_date + 30
 WHERE e.farm_id = %(farm_id)s
 GROUP BY f.name, e.event_id, e.event_date, t.common_name, t.scientific_name,
-         e.quantity, e.unit, p.title
+         e.quantity, e.unit, p.title, l.unit
 ORDER BY e.event_date DESC, lots_in_window DESC;
 ```
 
@@ -231,7 +237,7 @@ We plan three advanced functions. Two meet the 475 requirement, and the third me
 
 ### Advanced Function 1: Recursive Taxonomic Price Roll-up (week of October 26)
 
-**Problem.** A user picks any node in the taxonomy, such as a genus, family, or order, and wants prices for everything under it. The tree is twelve levels deep, and the number of levels below a node isn't known in advance, so a fixed number of joins can't express the query. Running one query per level from the application would need many round trips and would move the work out of the database.
+**Problem.** A user picks any node in the taxonomy, such as a genus, family, or order, and wants prices for everything under it. The number of levels below a node depends on where the user starts and on the branch: under an order there are families, genera, species, and for some species subspecies, varieties or cultivar groups, while other species have nothing beneath them. A fixed number of joins can't express the query for every starting point, and would break whenever a level is added, for example named cultivars under a cultivar group. Running one query per level from the application would need many round trips and would move the work out of the database.
 
 **Approach.** A recursive common table expression starts at the chosen node and repeatedly joins children on `parent_taxon_id` until it reaches the bottom of the subtree. The result is joined through the product table to the price data and aggregated, all in one statement:
 
@@ -245,18 +251,18 @@ WITH RECURSIVE subtree AS (
     FROM taxon c
     JOIN subtree s ON c.parent_taxon_id = s.taxon_id
 )
-SELECT s.taxon_id, s.scientific_name, s.common_name,
+SELECT s.taxon_id, s.scientific_name, s.common_name, v.unit,
        COUNT(v.lot_id)            AS lots,
        ROUND(AVG(v.avg_price), 2) AS mean_price,
        MIN(v.low_price)           AS floor_price,
        MAX(v.high_price)          AS ceiling_price
 FROM subtree s
 JOIN v_priced_lot v ON v.taxon_id = s.taxon_id
-GROUP BY s.taxon_id, s.scientific_name, s.common_name
+GROUP BY s.taxon_id, s.scientific_name, s.common_name, v.unit
 ORDER BY lots DESC;
 ```
 
-**Result so far.** Run on the order Asparagales, the query walks 198 descendant nodes, finds the 6 that have priced products, and returns 2,679 lots. Onion alone accounts for 1,382 lots at a $9.63 mean. "Onion," "garlic," and "shallot" share no text, so matching on names alone would not group them.
+**Result so far.** Run on the order Asparagales, the query walks 305 nodes, finds the 6 that have priced products (onion, shallot, garlic, leek, asparagus and hosta), and returns 1,805 prices. The largest group is onion by the peck: 558 prices at an $8.62 mean. "Onion," "garlic," and "shallot" share no text, so matching on names alone would not group them.
 
 **Remaining work.** A page that lets the user pick a node from the tree, a table of results with a total row, and a chart of the subtree's prices over time. We will also compare the recursive query with a lookup on the materialized path (`path LIKE '1.4.37.%'`) and report which is faster.
 
@@ -268,20 +274,20 @@ ORDER BY lots DESC;
 
 1. Get the taxonomy subtree the grower chooses, using the same recursive CTE as Advanced Function 1.
 2. Select every priced lot whose day of year falls inside the requested window, in any year. The window may wrap past December 31.
-3. For each product, compute the number of lots, the number of distinct years, the mean price, and the standard deviation.
+3. For each product and unit, compute the number of lots, the number of distinct years, the mean price, and the standard deviation. Prices in different units are never mixed.
 4. Drop any product with fewer than 12 lots or fewer than 2 distinct years.
 5. Compute a stability score that lowers a crop's mean price by its volatility. We plan to use the mean divided by (1 + coefficient of variation).
 6. Rank the products with `RANK() OVER (ORDER BY score DESC)`.
 
-Every candidate must resolve to a taxon. Our first version ranked "Watering can" first, because these auctions also sell merchandise. Requiring a taxon removes merchandise without a hand-written exclusion list.
+Every candidate must resolve to a taxon. These auctions also sell honey, firewood and metal art; requiring a taxon removes them without a hand-written exclusion list.
 
-**Result so far.** For late April with the root set at flowering plants, the query returns 25 ranked candidates, led by strawberry, rose, and marigold. That matches what sells at Ohio auctions in spring. With the root set at Asparagales, it returns two: garlic and asparagus.
+**Result so far.** For late April (day of year 110 to 135) with the root set at all vascular plants, the query returns 18 ranked product-and-unit candidates, led by marigolds by the flat, azaleas each, and tomato plants by the flat. That matches what sells at Ohio auctions in spring: bedding plants and nursery stock. With the root set at Asparagales, it returns one: asparagus.
 
 **Remaining work.** A form with a date window, a taxonomy node, and minimum evidence settings, and a results table where each row links to that crop's seasonal price curve.
 
 ### Advanced Function 3: Taxon Resolution Ladder for Free-Text Market Labels (week of November 2)
 
-**Problem.** 3,253 auction lots have descriptions that don't match any product yet, so their prices don't appear in any query above. Simple substring matching gives wrong answers. "Wild garlic" is not garlic, and a description that matches two products equally well should not be assigned to whichever one the database returns first.
+**Problem.** 4,795 auction prices carry 1,445 descriptions that don't match any product yet, so their prices don't appear in any query above. Simple substring matching gives wrong answers. "Wild garlic" is not garlic, and a description that matches two products equally well should not be assigned to whichever one the database returns first.
 
 **Approach.** Each unresolved label is tried against four rungs, from most to least confident:
 
@@ -294,14 +300,16 @@ At each rung, exactly one candidate means a match is proposed. Zero candidates s
 
 A person approves every proposed match on a review screen before it is written. The approval writes one row to `product_alias`, recording the rung that proposed it in `match_rung`. This links every past and future lot with that label to the product. The ladder reads from the taxonomy and product tables and has no hard-coded rules for particular crops, so it keeps working as new sources and labels arrive.
 
-**How we will measure it.** We will report the `v_resolution_coverage` percentage before and after, overall and for each source, along with how many labels ended as ambiguous and how many as not found.
+**How we will measure it.** We will report the `v_resolution_coverage` percentage before and after (85.8% today), overall and for each source, along with how many labels ended as ambiguous and how many as not found.
+
+**Automatic ingestion.** The ladder is the second half of a pipeline whose first half already works: the loaders that fetch new reports from the USDA archive and County Line's site and parse them by the shape of each line rather than fixed positions, as described in section 4. The assignment notes that parsing data from existing websites in a general way can count as advanced work. We will run the loaders on a schedule during the season, so new reports arrive, are checked against the schema's constraints, and send any new description to the ladder and the review screen.
 
 ## 7. Next Steps
 
 | Week | Work |
 | --- | --- |
 | October 19 | Submit this report (October 23). |
-| October 26 | Stage 4 demo (October 28). Advanced Function 1 page. Source comparison page (one crop in one period, side by side across the four sources). |
+| October 26 | Stage 4 demo (October 28). Advanced Function 1 page. Source comparison page (one crop in one period, side by side across the two sources). |
 | November 2 | Advanced Function 2 page. Advanced Function 3 ladder and review screen. |
 | November 9 | Stage 5 progress report. Deploy publicly, email Dr. Cheng, and start inviting users. |
 | November 16 | Collect real user data and fix bugs from feedback. |
