@@ -77,12 +77,14 @@ LIMIT 10
 # For each harvest, what the same crop sold for at auction within 30 days
 # either side of the harvest date. Joins the event log, farm, event kind,
 # taxonomy, product lexicon and market lots (through product_alias).
+# Prices are summarized per unit, since a peck and a bushel differ.
 HARVEST_PRICES_SQL = """
 SELECT f.name                             AS farm,
        e.event_date                       AS harvested_on,
        COALESCE(t.common_name, t.scientific_name) AS crop,
        e.quantity, e.unit,
        p.title                            AS market_product,
+       l.unit                             AS market_unit,
        COUNT(l.lot_id)                    AS lots_in_window,
        ROUND(AVG(l.avg_cents) / 100.0, 2) AS mean_price,
        MIN(l.low_cents)  / 100.0          AS low_price,
@@ -99,7 +101,7 @@ JOIN market_lot l     ON l.label_norm = a.label_norm
                                          AND e.event_date + 30
 WHERE e.farm_id = %(farm_id)s
 GROUP BY f.name, e.event_id, e.event_date, t.common_name, t.scientific_name,
-         e.quantity, e.unit, p.title
+         e.quantity, e.unit, p.title, l.unit
 ORDER BY e.event_date DESC, lots_in_window DESC
 """
 

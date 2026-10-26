@@ -66,6 +66,16 @@ GROUP BY p.product_id, p.title
 ORDER BY lots DESC, p.title
 """
 
+# Prices are only comparable within one unit (a peck is not a bushel),
+# so the curve is drawn for one unit at a time, the most common by default.
+TAXON_UNITS_SQL = """
+SELECT v.unit, COUNT(*) AS lots
+FROM v_priced_lot v
+WHERE v.taxon_id = %(taxon_id)s
+GROUP BY v.unit
+ORDER BY lots DESC, v.unit
+"""
+
 PRICE_CURVE_SQL = """
 SELECT EXTRACT(MONTH FROM v.sale_date)::INT           AS month,
        COUNT(*)                                       AS lots,
@@ -75,9 +85,13 @@ SELECT EXTRACT(MONTH FROM v.sale_date)::INT           AS month,
        MAX(v.high_price)                              AS ceiling_price
 FROM v_priced_lot v
 WHERE v.taxon_id = %(taxon_id)s
+  AND v.unit IS NOT DISTINCT FROM CAST(%(unit)s AS VARCHAR)
 GROUP BY EXTRACT(MONTH FROM v.sale_date)
 ORDER BY month
 """
+
+# Lots with no unit in the report are offered as this choice.
+UNSPECIFIED = "unspecified"
 
 
 def like_pattern(term):
@@ -115,7 +129,13 @@ def taxon_detail(taxon_id):
     taxon = query_one(TAXON_SQL, {"taxon_id": taxon_id})
     if taxon is None:
         abort(404)
-    curve = query(PRICE_CURVE_SQL, {"taxon_id": taxon_id})
+    units = query(TAXON_UNITS_SQL, {"taxon_id": taxon_id})
+    unit_names = [row["unit"] or UNSPECIFIED for row in units]
+    unit = request.args.get("unit")
+    if unit not in unit_names:
+        unit = unit_names[0] if unit_names else None
+    curve = query(PRICE_CURVE_SQL, {"taxon_id": taxon_id,
+                                    "unit": None if unit == UNSPECIFIED else unit})
     chart = {
         "labels": [MONTH_NAMES[row["month"] - 1] for row in curve],
         "floor": [as_float(row["floor_price"]) for row in curve],
@@ -128,6 +148,9 @@ def taxon_detail(taxon_id):
         products=query(TAXON_PRODUCTS_SQL, {"taxon_id": taxon_id}),
         curve=curve,
         chart=chart,
+        units=units,
+        unit=unit,
+        unspecified=UNSPECIFIED,
         month_names=MONTH_NAMES,
     )
 

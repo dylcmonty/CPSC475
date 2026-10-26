@@ -2,20 +2,17 @@
 
 **When:** Wednesday, October 28, 2026  
 **Length:** 5 to 8 minutes (aim for 7)  
-**Slides:** `slides.pdf` in this folder. Notes for each slide are in `speaker-notes.md`.
+**Slides:** `slides.pdf` in this folder. Notes for each slide are in `speaker-notes.md`; the full spoken script is in `presentation-script.md`.
 
 The assignment requires four things in the demo: real data in the database, insert/update/delete, at least one search query, and the plan for the advanced functions. Each step below is labeled with the requirement it covers.
 
 ## Before the Talk
 
-Do this the day before, then again 15 minutes before you present.
+The full word-for-word script, including when to launch the app, is in `presentation-script.md`. In short, from `~/Desktop/DB`:
 
-- [ ] Real data is loaded: `flask --app almanac init-db`, then `python scripts/import_sqlite.py <file>.sqlite`
-- [ ] The home page shows about 47,516 for `market_lot` (not 0)
-- [ ] Pick the demo farm: a real Ohio farm from the farm list, with no events yet. Write its name here: **[farm name]**
-- [ ] Check that onion has auction lots near your harvest date: open `/search?q=onion`, open *Allium cepa*, and check the price curve's July and August rows have lots. If not, choose a month that does and use it below.
-- [ ] Start the app: `flask --app almanac run`
-- [ ] Open browser tabs in this order: home page `/`, the demo farm's overview, `/search`
+- [ ] Night before: `./demo.sh setup <file>.sqlite` loads the real data and prints the demo farm, harvest date and market product to use
+- [ ] After each rehearsal: `./demo.sh reset`
+- [ ] 15 minutes before: `./demo.sh` checks the database, starts the app and opens the three tabs (home, demo farm, search). Leave the terminal open.
 - [ ] Zoom the browser to 125% so the back of the room can read it
 - [ ] Close other windows and notifications
 
@@ -37,7 +34,7 @@ Do this the day before, then again 15 minutes before you present.
 
 Home page `/`.
 
-> "This is the live PostgreSQL database. 47,516 auction lots from four Ohio sources, 4,118 taxonomy nodes, 238 real farms. The second table shows that 93% of lots already match a product. The rest is what Advanced Function 3 fixes."
+> "This is the live PostgreSQL database. 33,667 auction prices from two Ohio auctions, 2,993 taxonomy nodes, 107 real farms. The second table shows that 86% of prices already match a product. The rest is what Advanced Function 3 fixes."
 
 ### Step 2: Insert (requirement: insert)
 
@@ -45,7 +42,7 @@ On the demo farm's overview:
 
 1. **Crop catalog** tab, then search `onion`. Point out that results are ranked by how many auction lots each has. Click **Add** on *Allium cepa*.
 2. **Overview**, then **Add a plot**: name `North field`, area `1200`. Click **Add plot**.
-3. **Record an event**: Harvest, onion, plot North field, market product: the yellow onion product, date **2025-08-12** (or the month you checked), quantity `40`, unit `lb`. Click **Record event**.
+3. **Record an event**: Harvest, onion, plot North field, market product: Onions, date **2025-08-12** (or the month you checked), quantity `40`, unit `lb`. Click **Record event**.
 
 > "Each of these is an INSERT with bound parameters, so user input never touches the SQL text."
 
@@ -67,7 +64,7 @@ On the demo farm's overview:
 
 2. Click **Crop search** in the header, search `onion`, open *Allium cepa*:
 
-   > "The seasonal price curve: floor, mean and ceiling in every month across all seven seasons, plus how many seasons back each month."
+   > "The seasonal price curve: floor, mean and ceiling per peck in every month across all eight seasons, plus how many seasons back each month. The links switch units."
 
 ### Step 6: Delete (requirement: delete)
 
@@ -88,7 +85,7 @@ On the demo farm's overview:
 
 | Question | Answer |
 | --- | --- |
-| Why is the roll-up "advanced"? | The tree is 12 levels deep and the depth below any node is unknown. A fixed number of joins can't express it; a recursive CTE walks the subtree in one statement. |
+| Why is the roll-up "advanced"? | The user can start at any rank and the number of levels below it varies. A fixed number of joins can't express it; a recursive CTE walks the subtree in one statement. |
 | Why not just match auction labels by substring? | "Wild garlic" is not garlic, and when two products match equally, picking whichever row comes first gives a wrong match. The ladder stops and reports ambiguity instead. |
 | Where will grower data come from? | Real users. The site goes public the week of November 9, at least a week before the final demo, and we'll email you when it's live. |
 | How do you prevent SQL injection? | Every value is a bound parameter. The SQL text never contains user input. |
