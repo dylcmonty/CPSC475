@@ -32,6 +32,7 @@ Stack: PostgreSQL 16 (SQLite 3 for development), Python 3.12, Flask 3, psycopg 3
 
 ```
 README.md                         this file
+ERD.md                            entity relationship diagram (Mermaid)
 almanac/                          the Flask application
   __init__.py                     app factory
   db.py                           connection, query helpers, `flask init-db`
