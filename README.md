@@ -67,7 +67,7 @@ Each stage folder holds the submitted report as Markdown (easy to read and diff)
 
 ## Running the App
 
-Requires Python 3.10 or later and PostgreSQL 16.
+Requires Python 3.10 or later and PostgreSQL 16. For a step-by-step install on a new machine, see [SETUP.md](SETUP.md).
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
